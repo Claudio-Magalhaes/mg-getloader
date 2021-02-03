@@ -2,43 +2,6 @@ import React from 'react'
 import listVerifyData from "../lib/entradas/listRequestData";
 import getData from "../lib/getData";
 
-const VerifyData = d => {
-  let data = {};
-
-  /**
-   *
-   */
-  if (typeof d.data === "object"){
-    if (typeof d.data.config === "object" && Object.keys(d.data.config).length >= 1){
-      data.config = d.data.config;
-    } else {
-      data.config = false;
-    }
-
-    if (typeof d.data.require === "object" && Object.keys(d.data.require).length >= 1){
-      data.require = d.data.require;
-    } else {
-      data.require = false;
-    }
-
-    if (typeof d.data.optional === "object" && Object.keys(d.data.optional).length >= 1){
-      data.optional = d.data.optional;
-    } else {
-      data.optional = false;
-    }
-
-  } else {
-    data = false;
-  }
-
-  /**
-   *
-   */
-  return data !== false ?
-    (data.config === false) && (data.require === false) && (data.optional === false) ? false : data
-    : data;
-};
-
 class Index extends React.Component{
   constructor(props) {
     super(props);
@@ -49,6 +12,8 @@ class Index extends React.Component{
 
   componentDidMount() {
     let listVerify = listVerifyData(this.props.data);
+
+    console.log(listVerify);
 
     if (listVerify === false) {
       this.setState({
@@ -88,7 +53,7 @@ class Index extends React.Component{
             ...this.state.listVerify,
             config: {
               ...this.state.listVerify.config,
-              [n]: true
+              [n]: {...p}
             }
           }});
       }, dataRouter.config[n])
@@ -100,7 +65,7 @@ class Index extends React.Component{
             ...this.state.listVerify,
             require: {
               ...this.state.listVerify.require,
-              [n]: p
+              [n]: {...p}
             }
           }});
       }, dataRouter.require[n])
@@ -116,13 +81,17 @@ class Index extends React.Component{
             }
           }});
       }, dataRouter.optional[n])
-    })
+    });
+
   };
 
   render() {
     const {
-      loader
+      loader,
+      listVerify
     } = this.state;
+
+    console.log("listVerify", listVerify);
 
     if (loader) {
       return this.props.Loader;
