@@ -39,7 +39,12 @@ class Index extends React.Component{
       this.state.loader === true &&
       Object.values(this.state.liberado).indexOf(false) === -1
     ) {
-      this.verifyDisableLoader();
+      this.setState({ loader: false });
+    } else if (
+      typeof this.state.listVerify === "object" &&
+      this.state.loader === true
+    ) {
+
     }
   }
 
@@ -75,64 +80,43 @@ class Index extends React.Component{
   };
 
   configGetData = () => {
+
     let list = this.state.listVerify;
 
     let dataRouter = this.props.data.data;
 
-    Object.keys(list.config).map(n => {
-      getData(n, p => {
-        this.setState({
-          listVerify: {
-            ...this.state.listVerify,
-            config: {
-              ...this.state.listVerify.config,
-              [n]: {...p}
-            }
-          },
-          liberado: {
-            ...this.state.liberado,
-            config: true,
-            optional: true
-          }
-        });
-      }, dataRouter.config[n])
+    Object.keys(list).map(l => {
+      if (typeof list[l] === "object") {
+        if (Object.keys(list[l]).length > 0) {
+          Object.keys(list.config).map(n => {
+            getData(n, p => {
+              this.setState({
+                listVerify: {
+                  ...this.state.listVerify,
+                  [l]: {
+                    ...this.state.listVerify[l],
+                    [n]: {...p}
+                  }
+                },
+                liberado: {
+                  ...this.state.liberado,
+                  [l]: true
+                }
+              });
+            }, dataRouter.config[n])
+          });
+          return;
+        }
+      }
+
+      let liberado = this.state.liberado;
+      delete liberado[l];
+
+      this.setState({
+        liberado: liberado
+      })
     });
 
-    Object.keys(list.require).map(n => {
-      getData(n, p => {
-        this.setState({
-          listVerify: {
-            ...this.state.listVerify,
-            require: {
-              ...this.state.listVerify.require,
-              [n]: typeof p === "object" ? {...p} : p
-            }
-          },
-          liberado: {
-            ...this.state.liberado,
-            require: true
-          }
-        });
-      }, dataRouter.require[n])
-    });
-
-    Object.keys(list.optional).map(n => {
-      getData(n, p => {
-        this.setState({
-          listVerify: {
-            ...this.state.listVerify,
-            optional: {
-              ...this.state.listVerify.optional,
-              [n]: true
-            }
-          },
-          liberado: {
-            ...this.state.liberado,
-            optional: true
-          }
-        });
-      }, dataRouter.optional[n])
-    });
   };
 
   render() {
@@ -145,7 +129,7 @@ class Index extends React.Component{
       return this.props.Loader;
     } else {
       return (
-        <this.props.data.Page {...this.props} />
+        <this.props.data.Page {...this.props}  />
       )
     }
   }
