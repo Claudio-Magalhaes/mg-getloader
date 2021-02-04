@@ -6,14 +6,17 @@ class Index extends React.Component{
   constructor(props) {
     super(props);
     this.state = {
-      loader: true
+      loader: true,
+      liberado: {
+        config: false,
+        require: false,
+        optional: false
+      }
     };
   }
 
   componentDidMount() {
     let listVerify = listVerifyData(this.props.data);
-
-    console.log(listVerify);
 
     if (listVerify === false) {
       this.setState({
@@ -31,16 +34,45 @@ class Index extends React.Component{
       this.configGetData();
     }
 
-    if (typeof this.state.listVerify === "object" && this.state.loader === true) {
-      if (
-        Object.values(this.state.listVerify.config).indexOf(false) === -1 &&
-        Object.values(this.state.listVerify.require).indexOf(false) === -1
-      ) {
-        this.setState({ loader: false });
-      }
-
+    if (
+      typeof this.state.listVerify === "object" &&
+      this.state.loader === true &&
+      Object.values(this.state.liberado).indexOf(false) === -1
+    ) {
+      this.verifyDisableLoader();
     }
   }
+
+  verifyDisableLoader = () => {
+    let objVerify = {};
+    let self = this;
+
+    const loop = (c, listVerify) => {
+      let log = [];
+      if (typeof listVerify[c] === "boolean") {
+        return [listVerify[c]];
+      } else if (typeof listVerify[c] === "object") {
+
+        Object.keys(listVerify[c]).map(v => {
+          log = [
+            ...log,
+            ...loop(v, listVerify[c])
+          ];
+        });
+      }
+
+      return log;
+    };
+    Object.keys(this.state.listVerify).map(v => {
+      objVerify[v] = loop(v, this.state.listVerify);
+      self.setState({
+        liberado: {
+          ...self.state.liberado,
+          [v]: loop(v, self.state.listVerify).indexOf(false) === -1
+        }
+      })
+    });
+  };
 
   configGetData = () => {
     let list = this.state.listVerify;
@@ -49,49 +81,65 @@ class Index extends React.Component{
 
     Object.keys(list.config).map(n => {
       getData(n, p => {
-        this.setState({listVerify: {
+        this.setState({
+          listVerify: {
             ...this.state.listVerify,
             config: {
               ...this.state.listVerify.config,
               [n]: {...p}
             }
-          }});
+          },
+          liberado: {
+            ...this.state.liberado,
+            config: true,
+            optional: true
+          }
+        });
       }, dataRouter.config[n])
     });
 
     Object.keys(list.require).map(n => {
       getData(n, p => {
-        this.setState({listVerify: {
+        this.setState({
+          listVerify: {
             ...this.state.listVerify,
             require: {
               ...this.state.listVerify.require,
-              [n]: {...p}
+              [n]: typeof p === "object" ? {...p} : p
             }
-          }});
+          },
+          liberado: {
+            ...this.state.liberado,
+            require: true
+          }
+        });
       }, dataRouter.require[n])
     });
 
     Object.keys(list.optional).map(n => {
       getData(n, p => {
-        this.setState({listVerify: {
+        this.setState({
+          listVerify: {
             ...this.state.listVerify,
             optional: {
               ...this.state.listVerify.optional,
               [n]: true
             }
-          }});
+          },
+          liberado: {
+            ...this.state.liberado,
+            optional: true
+          }
+        });
       }, dataRouter.optional[n])
     });
-
   };
 
   render() {
     const {
-      loader,
-      listVerify
+      loader
     } = this.state;
 
-    console.log("listVerify", listVerify);
 
     if (loader) {
       return this.props.Loader;
