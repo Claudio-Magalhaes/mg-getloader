@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react';
 import listVerifyData from "../lib/entradas/listRequestData";
 import getData from "../lib/getData";
 
@@ -11,7 +11,8 @@ class Index extends React.Component{
         config: false,
         require: false,
         optional: false
-      }
+      },
+      verificado: {}
     };
   }
 
@@ -37,46 +38,58 @@ class Index extends React.Component{
     if (
       typeof this.state.listVerify === "object" &&
       this.state.loader === true &&
-      Object.values(this.state.liberado).indexOf(false) === -1
+      Object.values(this.state.liberado).indexOf(false) === -1 &&
+      this.state.liberado !== prevState.liberado
     ) {
-      this.setState({ loader: false });
-    } else if (
-      typeof this.state.listVerify === "object" &&
-      this.state.loader === true
-    ) {
+      console.log(this.state.liberado);
+      this.verifyDisableLoader();
+    }
 
+
+    if (Object.keys(this.state.liberado).length === Object.keys(this.state.verificado).length && this.state.loader) {
+      if (Object.values(this.state.verificado).indexOf(false) === -1){
+        this.setState({
+          loader: false
+        })
+      }
     }
   }
+
+  loop = (c, listVerify, push = false) => {
+    let log = [];
+    if (typeof listVerify[c] === "boolean") {
+      return [listVerify[c]];
+    } else if (typeof listVerify[c] === "object") {
+      Object.keys(listVerify[c]).map((v, k, b, p=push) => {
+
+        if (p) {
+          log.concat(...this.loop(v, listVerify[c], true));
+        } else {
+          log.push(...this.loop(v, listVerify[c], true));
+        }
+        log = [
+          ...log,
+          ...this.loop(v, listVerify[c], true)
+        ];
+
+      });
+    }
+    console.log("log", log);
+    return log;
+  };
 
   verifyDisableLoader = () => {
     let objVerify = {};
     let self = this;
 
-    const loop = (c, listVerify) => {
-      let log = [];
-      if (typeof listVerify[c] === "boolean") {
-        return [listVerify[c]];
-      } else if (typeof listVerify[c] === "object") {
+    Object.keys(this.state.liberado).map(v => {
+      objVerify[v] = this.loop(v, this.state.listVerify).indexOf(false) === -1;
 
-        Object.keys(listVerify[c]).map(v => {
-          log = [
-            ...log,
-            ...loop(v, listVerify[c])
-          ];
-        });
-      }
-
-      return log;
-    };
-    Object.keys(this.state.listVerify).map(v => {
-      objVerify[v] = loop(v, this.state.listVerify);
-      self.setState({
-        liberado: {
-          ...self.state.liberado,
-          [v]: loop(v, self.state.listVerify).indexOf(false) === -1
-        }
-      })
     });
+
+    this.setState({
+      verificado: objVerify
+    })
   };
 
   configGetData = () => {
@@ -87,15 +100,17 @@ class Index extends React.Component{
 
     Object.keys(list).map(l => {
       if (typeof list[l] === "object") {
+
         if (Object.keys(list[l]).length > 0) {
-          Object.keys(list.config).map(n => {
+
+          Object.keys(list[l]).map(n => {
             getData(n, p => {
               this.setState({
                 listVerify: {
                   ...this.state.listVerify,
                   [l]: {
                     ...this.state.listVerify[l],
-                    [n]: {...p}
+                    [n]: p
                   }
                 },
                 liberado: {
@@ -103,7 +118,7 @@ class Index extends React.Component{
                   [l]: true
                 }
               });
-            }, dataRouter.config[n])
+            }, dataRouter[l][n])
           });
           return;
         }
