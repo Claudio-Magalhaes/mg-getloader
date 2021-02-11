@@ -1,7 +1,5 @@
 # mg-getLoader
 
-> description
-
 [![NPM](https://img.shields.io/npm/v/mg-getloader.svg)](https://www.npmjs.com/package/mg-getloader) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 ## Install
@@ -16,14 +14,66 @@ npm install --save mg-getloader
 import React, { Component } from 'react'
 
 import MyComponent from 'mg-getloader'
-import 'mg-getloader/dist/index.css'
 
-class Example extends Component {
-  render() {
-    return <MyComponent />
+
+const routers = [
+  {
+    router: "/",
+    Page: Home,
+    exact: true,
+    param: "",
+    data: {
+      config: {
+        Site_Config: "object",
+      },
+      require: {
+        home: {
+          apresentacao: "object"
+        }
+      }
+    }
   }
+];
+
+function App(props) {
+
+  return (
+    <div>
+      <Router>
+        <Switch>
+          {routers.map((d, k) => (
+            <Route
+              key={k}
+              path={`${process.env.PUBLIC_URL + d.router + d.param}`}
+              exact={d.exact}
+              render={props => <VerifLoader
+                {...props}
+                data={d}
+                Loader={(<>Loader</>)}
+              />}
+            />
+          ))}
+          <Route exact component={NotFound} />
+        </Switch>
+      </Router>
+    </div>
+  );
 }
 ```
+
+## routers
+
+> O array router representa todos os dados necessários para o roteamento e busca de dados da página
+
+##### router
+> representa a rota acessada
+
+##### param
+> informa os parametros da pádina
+
+##### Page
+> representa a página a ser esibida
+
 
 ## License
 
