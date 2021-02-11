@@ -1,13 +1,13 @@
-# react-loader-getdata
+# mg-getLoader
 
 > description
 
-[![NPM](https://img.shields.io/npm/v/react-loader-getdata.svg)](https://www.npmjs.com/package/react-loader-getdata) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![NPM](https://img.shields.io/npm/v/mg-getloader.svg)](https://www.npmjs.com/package/mg-getloader) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 ## Install
 
 ```bash
-npm install --save react-loader-getdata
+npm install --save mg-getloader
 ```
 
 ## Usage
@@ -15,8 +15,8 @@ npm install --save react-loader-getdata
 ```jsx
 import React, { Component } from 'react'
 
-import MyComponent from 'react-loader-getdata'
-import 'react-loader-getdata/dist/index.css'
+import MyComponent from 'mg-getloader'
+import 'mg-getloader/dist/index.css'
 
 class Example extends Component {
   render() {
