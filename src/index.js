@@ -41,7 +41,6 @@ class Index extends React.Component{
       Object.values(this.state.liberado).indexOf(false) === -1 &&
       this.state.liberado !== prevState.liberado
     ) {
-      console.log(this.state.liberado);
       this.verifyDisableLoader();
     }
 
@@ -74,8 +73,7 @@ class Index extends React.Component{
 
       });
     }
-    console.log("log", log);
-    return log;
+    return log
   };
 
   verifyDisableLoader = () => {
