@@ -20,7 +20,7 @@ class Index extends React.Component {
     const listVerify = listVerifyData(this.props.data)
     new Promise((resolve, reject) => {
       if (typeof this.props.config === 'object') {
-        if (Object.keys(this.props.config).length <= 1) {
+        if (Object.keys(this.props.config).length >= 1) {
           Object.keys(this.props.config).map((n) => {
             getData(
               n,
@@ -51,7 +51,7 @@ class Index extends React.Component {
           })
         }
       })
-      .catch((e) => {
+      .catch(() => {
         console.error(
           'erro de busca:',
           'não foi possível buscar dados de configuração do site'

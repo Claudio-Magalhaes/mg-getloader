@@ -124,6 +124,22 @@ data | object | deve receber os dados das páginas buscadas na base da aplicaç�
 > Usamos o grupo de ```require``` por conveniência, pois essa ordem deve ser mantida por todos os grupos de dados.
 
 
+#config
+> informe aqui de os dados das páginas de configuração que devem ser baixadas antes antes dos dados do site.
+> Para isso, informe um objeto semelhante ao das rotas
+
+* será necessário informar de maneira literal os verificadore"
+
+
+```jsx
+      config: {
+        configuracoes: "object",
+        layout: "object"
+      }
+```
+
+
+
 ## License
 
 MIT © [claudio magalhaes](https://github.com/claudio magalhaes)
