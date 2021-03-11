@@ -1,8 +1,12 @@
 import React, { Component, Fragment } from 'react'
 import getData from '../lib/getDate'
 import PropType from 'prop-types'
-import { checkTimerGet } from '../lib/timerGet'
-import { checkParam, getDataSession } from '../lib/getDate/config'
+import { checkTimerGet } from '../lib/timerPause'
+import {
+  checkParam,
+  getDataSession,
+  checkConfigSave
+} from '../lib/getDate/config'
 import verifyDataRequest from '../lib/verifyDataRequest'
 require('../src/css/progressBar.css')
 
@@ -18,7 +22,12 @@ class index extends Component {
       // state de controle da barra de loader
       progress: false,
       progressValue: 0,
-      progressError: ''
+      progressError: '',
+      // state base de configuração do props
+      configSave: {
+        saveLog: this.props.saveLog,
+        timerPause: this.props.timerPause
+      }
     }
   }
 
@@ -110,7 +119,11 @@ class index extends Component {
 
   request = () => {
     if (this.props.data.data.required) {
-      if (this.props.data.data.required[0]) {
+      if (
+        typeof this.props.data.data.required === 'object' ||
+        Array.isArray(this.props.data.data.required)
+      ) {
+
         this.setState({
           state: 'request',
           compare: 'required',
@@ -172,7 +185,7 @@ class index extends Component {
       const configSave = {
         saveLog: this.props.saveLog,
         rootName: rootName,
-        timerPause: this.props.timerGet
+        timerPause: this.props.timerPause
       }
 
       // alterando dados de salvamento pelo grupo
@@ -181,8 +194,8 @@ class index extends Component {
           if (root[1].name) {
             configSave.rootName = root[1].name
           }
-          if (root[1].timerGet) {
-            configSave.timerPause = root[1].timerGet
+          if (root[1].timerPause) {
+            configSave.timerPause = root[1].timerPause
           }
         }
       }
@@ -213,7 +226,7 @@ class index extends Component {
                     configSave.rootName = getSiteConfig[n][2].name
                   }
                   if (getSiteConfig[n][2]) {
-                    configSave.timerPause = getSiteConfig[n][2].timerGet
+                    configSave.timerPause = getSiteConfig[n][2].timerPause
                   }
                 }
               }
@@ -349,7 +362,7 @@ class index extends Component {
 
 index.defaultProps = {
   config: {},
-  timerGet: 3,
+  timerPause: 3,
   url: {
     base:
       window.location.origin + '/core_magales/Public/Functions/DataSite?page=',
@@ -365,7 +378,7 @@ index.defaultProps = {
 
 index.propTypes = {
   config: PropType.object,
-  timerGet: PropType.number,
+  timerPause: PropType.number,
   baseUrl: PropType.object,
   alternativeUrl: PropType.string,
   TestUrl: PropType.string
