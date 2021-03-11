@@ -1,7 +1,7 @@
 import React, { Component, Fragment } from 'react'
 import getData from '../lib/getDate'
 import PropType from 'prop-types'
-import { checkTimerGet } from '../lib/timerPause'
+import { checkTimerGet } from '../lib/timerGet'
 import {
   checkParam,
   getDataSession,
@@ -25,26 +25,36 @@ class index extends Component {
       progressError: '',
       // state base de configuração do props
       configSave: {
-        saveLog: this.props.saveLog,
-        timerPause: this.props.timerPause
+        saveLog: props.saveLog,
+        timerPause: props.timerPause
       }
     }
   }
 
   componentDidMount() {
-    this.siteConfig()
+    this.setState({ state: 'start' })
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
     switch (this.state.state) {
+      case 'start':
+        this.configRequest(this.props.config, 'siteConfig')
+        break
       case 'siteConfig':
         if (this.state.compare) {
           if (this.state.data[this.state.compare]) {
-            if (
-              Object.keys(this.state.data[this.state.compare]).length ===
-              Object.keys(this.props.config).length
-            ) {
-              this.requestConfig()
+            if (this.props.config) {
+              const length = Array.isArray(this.props.config)
+                ? Object.keys(this.props.config[0]).length
+                : Object.keys(this.props.config).length
+              if (
+                Object.keys(this.state.data[this.state.compare]).length ===
+                length
+              ) {
+                this.configRequest(this.props.data.data.config, 'requestConfig')
+              }
+            } else {
+              this.nextState()
             }
           }
         }
@@ -52,11 +62,18 @@ class index extends Component {
       case 'requestConfig':
         if (this.state.compare) {
           if (this.state.data[this.state.compare]) {
-            if (
-              Object.keys(this.state.data[this.state.compare]).length ===
-              Object.keys(this.props.data.data.config).length
-            ) {
-              this.request()
+            if (this.props.data.data.config) {
+              const length = Array.isArray(this.props.data.data.config)
+                ? Object.keys(this.props.data.data.config[0]).length
+                : Object.keys(this.props.data.data.config).length
+              if (
+                Object.keys(this.state.data[this.state.compare]).length ===
+                length
+              ) {
+                this.configRequest(this.props.data.data.required, 'request')
+              }
+            } else {
+              this.nextState()
             }
           }
         }
@@ -64,11 +81,18 @@ class index extends Component {
       case 'request':
         if (this.state.compare) {
           if (this.state.data[this.state.compare]) {
-            if (
-              Object.keys(this.state.data[this.state.compare]).length ===
-              Object.keys(this.props.data.data.required).length
-            ) {
-              this.requestOptional()
+            if (this.props.data.data.required) {
+              const length = Array.isArray(this.props.data.data.required)
+                ? Object.keys(this.props.data.data.required[0]).length
+                : Object.keys(this.props.data.data.required).length
+              if (
+                Object.keys(this.state.data[this.state.compare]).length ===
+                length
+              ) {
+                this.configRequest(this.props.data.data.optional, 'optional')
+              }
+            } else {
+              this.nextState()
             }
           }
         }
@@ -77,9 +101,12 @@ class index extends Component {
         if (this.state.compare) {
           if (this.state.data[this.state.compare]) {
             if (this.props.data.data.optional) {
+              const length = Array.isArray(this.props.data.data.optional)
+                ? Object.keys(this.props.data.data.optional[0]).length
+                : Object.keys(this.props.data.data.optional).length
               if (
                 Object.keys(this.state.data[this.state.compare]).length ===
-                Object.keys(this.props.data.data.optional).length
+                length
               ) {
                 this.nextState()
               }
@@ -92,67 +119,157 @@ class index extends Component {
     }
   }
 
-  siteConfig = () => {
-    this.setState({
-      state: 'siteConfig',
-      compare: 'siteConfig'
-    })
-    this.configGet(this.props.config, 'siteConfig')
-  }
-
-  requestConfig = () => {
-    if (this.props.data.data.config) {
-      if (this.props.data.data.config[0]) {
+  configRequest = (root, nameRoot) => {
+    if (root) {
+      if (typeof root === 'object' || Array.isArray(root)) {
+        let configSave = {}
+        if (Array.isArray(root)) {
+          configSave = checkConfigSave(
+            {
+              ...this.state.configSave,
+              rootName: nameRoot
+            },
+            root[1]
+          )
+        } else {
+          configSave = {
+            ...this.state.configSave,
+            rootName: nameRoot
+          }
+        }
         this.setState({
-          state: 'requestConfig',
-          compare: 'config',
+          state: nameRoot,
+          compare: configSave.rootName,
           progress: false,
           progressValue: 0,
           progressError: ''
         })
-        this.configGet(this.props.data.data.config, 'config')
+        this.request(root, configSave.rootName, configSave)
         return
       }
     }
     this.nextState()
   }
 
-  request = () => {
-    if (this.props.data.data.required) {
-      if (
-        typeof this.props.data.data.required === 'object' ||
-        Array.isArray(this.props.data.data.required)
-      ) {
+  request = (root, rootName, configSave) => {
+    // recolhendo dados de busca de paginas
+    // aqui estão os parâmetros de comparação das buscas
+    const getSiteConfig = Array.isArray(root) ? root[0] : root
 
-        this.setState({
-          state: 'request',
-          compare: 'required',
-          progress: false,
-          progressValue: 0,
-          progressError: ''
-        })
-        this.configGet(this.props.data.data.required, 'required')
-        return
+    // alterando dados de salvamento pelo grupo
+    // aqui estão os daods de url das buscas
+    if (root[1]) {
+      checkConfigSave(configSave, root[1])
+      if (typeof root[1] === 'object') {
+        if (root[1].name) {
+          configSave.rootName = root[1].name
+        }
+        if (root[1].timerPause) {
+          configSave.timerPause = root[1].timerPause
+        }
       }
     }
-    this.nextState()
-  }
 
-  requestOptional = () => {
-    if (this.props.data.data.optional) {
-      if (this.props.data.data.optional[0]) {
+    if (Object.keys(getSiteConfig).length >= 1) {
+      this.setState({
+        progressValuePart: 100 / Object.keys(getSiteConfig).length,
+        data: {
+          ...this.state.data,
+          [rootName]: {}
+        }
+      })
+
+      let dataSession = false
+
+      if (Object.keys(getSiteConfig).length >= 1) {
         this.setState({
-          state: 'requestOptional',
-          compare: 'optional',
-          progress: false,
-          progressValue: 0,
-          progressError: ''
+          progressValuePart: 100 / Object.keys(getSiteConfig).length
         })
-        this.configGet(this.props.data.data.config, 'optional')
-        return
+
+        Object.keys(getSiteConfig).map((n) => {
+          // alterando dados de salvamento individual
+          if (getSiteConfig[n][2]) {
+            if (typeof getSiteConfig[n][2] === 'object') {
+              if (getSiteConfig[n][2].name) {
+                configSave.rootName = getSiteConfig[n][2].name
+              }
+              if (getSiteConfig[n][2]) {
+                configSave.timerPause = getSiteConfig[n][2].timerPause
+              }
+            }
+          }
+
+          const name = checkParam(n, getSiteConfig[n][1]).saveName
+
+          if (checkTimerGet(rootName, name)) {
+            getData(
+              this.props.url,
+              n,
+              this.callback,
+              getSiteConfig[n][0],
+              getSiteConfig[n][1],
+              configSave
+            )
+          } else if (getDataSession(configSave.rootName, name)) {
+            const dataVerify = verifyDataRequest(
+              name,
+              getDataSession(configSave.rootName, name),
+              getSiteConfig[n][0]
+            )
+
+            if (!dataVerify.status) {
+              getData(
+                this.props.url,
+                n,
+                this.callback,
+                getSiteConfig[n][0],
+                getSiteConfig[n][1],
+                configSave
+              )
+            } else {
+              if (dataSession === false) {
+                dataSession = {}
+              }
+              dataSession = {
+                ...dataSession,
+                [name]: {
+                  ...getDataSession(configSave.rootName, name)
+                }
+              }
+            }
+          } else {
+            getData(
+              this.props.url,
+              n,
+              this.callback,
+              getSiteConfig[n][0],
+              getSiteConfig[n][1],
+              configSave
+            )
+          }
+        })
+
+        if (dataSession !== false && Object.keys(dataSession).length >= 1) {
+          this.setState({
+            data: {
+              ...this.state.data,
+              [rootName]: {
+                ...this.state.data[rootName],
+                ...dataSession
+              }
+            }
+          })
+        }
       }
+    } else {
+      this.setState({
+        next: true,
+        data: {
+          ...this.state.data,
+          [rootName]: {}
+        }
+      })
     }
-    this.nextState()
   }
 
   nextState = () => {
@@ -377,7 +494,7 @@ index.defaultProps = {
 }
 
 index.propTypes = {
-  config: PropType.object,
+  //config: PropType.object,
   timerPause: PropType.number,
   baseUrl: PropType.object,
   alternativeUrl: PropType.string,
