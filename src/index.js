@@ -57,7 +57,7 @@ class index extends Component {
           if (this.state.data[this.state.compare]) {
             if (
               Object.keys(this.state.data[this.state.compare]).length ===
-              Object.keys(this.props.data.data.require).length
+              Object.keys(this.props.data.data.required).length
             ) {
               this.requestOptional()
             }
@@ -109,16 +109,16 @@ class index extends Component {
   }
 
   request = () => {
-    if (this.props.data.data.require) {
-      if (this.props.data.data.require[0]) {
+    if (this.props.data.data.required) {
+      if (this.props.data.data.required[0]) {
         this.setState({
           state: 'request',
-          compare: 'require',
+          compare: 'required',
           progress: false,
           progressValue: 0,
           progressError: ''
         })
-        this.configGet(this.props.data.data.require, 'require')
+        this.configGet(this.props.data.data.required, 'required')
         return
       }
     }
@@ -196,6 +196,8 @@ class index extends Component {
           }
         })
 
+        let dataSession = false
+
         // eslint-disable-next-line no-new
         new Promise((resolve, reject) => {
           if (Object.keys(getSiteConfig).length >= 1) {
@@ -218,7 +220,7 @@ class index extends Component {
 
               const name = checkParam(n, getSiteConfig[n][1]).saveName
 
-              if (checkTimerGet(configSave.rootName, name)) {
+              if (checkTimerGet(rootName, name)) {
                 getData(
                   this.props.url,
                   n,
@@ -235,25 +237,53 @@ class index extends Component {
                 )
 
                 if (!dataVerify.status) {
-                  this.callback(null, null, null, true)
-                } else {
-                  this.callback(
-                    name,
-                    getDataSession(configSave.rootName, name),
-                    configSave.rootName
+                  getData(
+                    this.props.url,
+                    n,
+                    this.callback,
+                    getSiteConfig[n][0],
+                    getSiteConfig[n][1],
+                    configSave
                   )
+                } else {
+                  if (dataSession === false) {
+                    dataSession = {}
+                  }
+                  dataSession = {
+                    ...dataSession,
+                    [name]: {
+                      ...getDataSession(configSave.rootName, name)
+                    }
+                  }
                 }
               } else {
-                window.alert('ultimo get')
+                getData(
+                  this.props.url,
+                  n,
+                  this.callback,
+                  getSiteConfig[n][0],
+                  getSiteConfig[n][1],
+                  configSave
+                )
               }
             })
+
+            if (dataSession !== false && Object.keys(dataSession).length >= 1) {
+              this.setState({
+                data: {
+                  ...this.state.data,
+                  [rootName]: {
+                    ...this.state.data[rootName],
+                    ...dataSession
+                  }
+                }
+              })
+            }
           }
 
           resolve()
         })
-          .then((e) => {
-
-          })
+          .then((e) => {})
           .catch((e) => {
             console.log(e)
           })
