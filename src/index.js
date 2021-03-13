@@ -5,7 +5,7 @@ import { checkTimerGet } from '../lib/timerGet'
 import {
   checkParam,
   getDataSession,
-  checkConfigSave
+  checkConfigSave, checkUrl
 } from '../lib/getDate/config'
 import verifyDataRequest from '../lib/verifyDataRequest'
 require('../src/css/progressBar.css')
@@ -123,7 +123,7 @@ class index extends Component {
     if (root) {
       if (typeof root === 'object' || Array.isArray(root)) {
         let configSave = {}
-        if (Array.isArray(root)) {
+        if (Array.isArray(root) && root[1]) {
           configSave = checkConfigSave(
             {
               ...this.state.configSave,
@@ -131,10 +131,12 @@ class index extends Component {
             },
             root[1]
           )
+          configSave.url = checkUrl(this.props.url, root[1].url)
         } else {
           configSave = {
             ...this.state.configSave,
-            rootName: nameRoot
+            rootName: nameRoot,
+            url: this.props.url
           }
         }
         this.setState({
@@ -156,110 +158,86 @@ class index extends Component {
     // aqui estão os parâmetros de comparação das buscas
     const getSiteConfig = Array.isArray(root) ? root[0] : root
 
-    // alterando dados de salvamento pelo grupo
-    // aqui estão os daods de url das buscas
-    if (root[1]) {
-      checkConfigSave(configSave, root[1])
-      if (typeof root[1] === 'object') {
-        if (root[1].name) {
-          configSave.rootName = root[1].name
-        }
-        if (root[1].timerPause) {
-          configSave.timerPause = root[1].timerPause
-        }
-      }
-    }
-
     if (Object.keys(getSiteConfig).length >= 1) {
       this.setState({
         progressValuePart: 100 / Object.keys(getSiteConfig).length,
         data: {
           ...this.state.data,
-          [rootName]: {}
+          [configSave.rootName]: {}
         }
       })
 
       let dataSession = false
 
-      if (Object.keys(getSiteConfig).length >= 1) {
-        this.setState({
-          progressValuePart: 100 / Object.keys(getSiteConfig).length
-        })
-
-        Object.keys(getSiteConfig).map((n) => {
-          // alterando dados de salvamento individual
-          if (getSiteConfig[n][2]) {
-            if (typeof getSiteConfig[n][2] === 'object') {
-              if (getSiteConfig[n][2].name) {
-                configSave.rootName = getSiteConfig[n][2].name
-              }
-              if (getSiteConfig[n][2]) {
-                configSave.timerPause = getSiteConfig[n][2].timerPause
-              }
-            }
-          }
-
-          const name = checkParam(n, getSiteConfig[n][1]).saveName
-
-          if (checkTimerGet(rootName, name)) {
-            getData(
-              this.props.url,
-              n,
-              this.callback,
-              getSiteConfig[n][0],
-              getSiteConfig[n][1],
-              configSave
-            )
-          } else if (getDataSession(configSave.rootName, name)) {
-            const dataVerify = verifyDataRequest(
-              name,
-              getDataSession(configSave.rootName, name),
-              getSiteConfig[n][0]
-            )
-
-            if (!dataVerify.status) {
-              getData(
-                this.props.url,
-                n,
-                this.callback,
-                getSiteConfig[n][0],
-                getSiteConfig[n][1],
-                configSave
-              )
-            } else {
-              if (dataSession === false) {
-                dataSession = {}
-              }
-              dataSession = {
-                ...dataSession,
-                [name]: {
-                  ...getDataSession(configSave.rootName, name)
-                }
-              }
-            }
-          } else {
-            getData(
-              this.props.url,
-              n,
-              this.callback,
-              getSiteConfig[n][0],
-              getSiteConfig[n][1],
-              configSave
-            )
-          }
-        })
-
-        if (dataSession !== false && Object.keys(dataSession).length >= 1) {
-          this.setState({
-            data: {
-              ...this.state.data,
-              [rootName]: {
-                ...this.state.data[rootName],
-                ...dataSession
-              }
-            }
-          })
+      Object.keys(getSiteConfig).map((n) => {
+        let param = {}
+        let url = {}
+        if (getSiteConfig[n][1]) {
+          param = checkParam(n, getSiteConfig[n][1].param)
+          url = checkUrl(configSave.url, getSiteConfig[n][1].url)
+        } else {
+          param = checkParam(n, {})
+          url = configSave.url
         }
+
+        if (checkTimerGet(rootName, param.saveName)) {
+          getData(
+            url,
+            param,
+            this.callback,
+            getSiteConfig[n][0],
+            getSiteConfig[n][1],
+            configSave
+          )
+        } else if (getDataSession(configSave.rootName, param.saveName)) {
+          const dataVerify = verifyDataRequest(
+            param,
+            getDataSession(configSave.rootName, param.saveName),
+            getSiteConfig[n][0]
+          )
+
+          if (!dataVerify.status) {
+            getData(
+              url,
+              param,
+              this.callback,
+              getSiteConfig[n][0],
+              getSiteConfig[n][1],
+              configSave
+            )
+          } else {
+            if (dataSession === false) {
+              dataSession = {}
+            }
+            dataSession = {
+              ...dataSession,
+              [param.saveName]: {
+                ...getDataSession(configSave.rootName, param.saveName)
+              }
+            }
+          }
+        } else {
+          getData(
+            url,
+            param.saveName,
+            this.callback,
+            getSiteConfig[n][0],
+            getSiteConfig[n][1],
+            configSave
+          )
+        }
+      })
+
+      if (dataSession !== false && Object.keys(dataSession).length >= 1) {
+        this.setState({
+          data: {
+            ...this.state.data,
+            [rootName]: {
+              ...this.state.data[rootName],
+              ...dataSession
+            }
+          }
+        })
       }
     } else {
       this.setState({
@@ -291,142 +269,6 @@ class index extends Component {
     }
 
     this.setState({ state: next })
-  }
-
-  configGet = (root, rootName) => {
-    if (typeof root === 'object' || Array.isArray(root)) {
-      // recolhendo dados de busca de paginas
-      const getSiteConfig = Array.isArray(root) ? root[0] : root
-
-      // iniciando configurações de salvamento geral de dados
-      const configSave = {
-        saveLog: this.props.saveLog,
-        rootName: rootName,
-        timerPause: this.props.timerPause
-      }
-
-      // alterando dados de salvamento pelo grupo
-      if (root[1]) {
-        if (typeof root[1] === 'object') {
-          if (root[1].name) {
-            configSave.rootName = root[1].name
-          }
-          if (root[1].timerPause) {
-            configSave.timerPause = root[1].timerPause
-          }
-        }
-      }
-
-      if (Object.keys(getSiteConfig).length >= 1) {
-        this.setState({
-          progressValuePart: 100 / Object.keys(getSiteConfig).length,
-          data: {
-            ...this.state.data,
-            [rootName]: {}
-          }
-        })
-
-        let dataSession = false
-
-        // eslint-disable-next-line no-new
-        new Promise((resolve, reject) => {
-          if (Object.keys(getSiteConfig).length >= 1) {
-            this.setState({
-              progressValuePart: 100 / Object.keys(getSiteConfig).length
-            })
-
-            Object.keys(getSiteConfig).map((n) => {
-              // alterando dados de salvamento individual
-              if (getSiteConfig[n][2]) {
-                if (typeof getSiteConfig[n][2] === 'object') {
-                  if (getSiteConfig[n][2].name) {
-                    configSave.rootName = getSiteConfig[n][2].name
-                  }
-                  if (getSiteConfig[n][2]) {
-                    configSave.timerPause = getSiteConfig[n][2].timerPause
-                  }
-                }
-              }
-
-              const name = checkParam(n, getSiteConfig[n][1]).saveName
-
-              if (checkTimerGet(rootName, name)) {
-                getData(
-                  this.props.url,
-                  n,
-                  this.callback,
-                  getSiteConfig[n][0],
-                  getSiteConfig[n][1],
-                  configSave
-                )
-              } else if (getDataSession(configSave.rootName, name)) {
-                const dataVerify = verifyDataRequest(
-                  name,
-                  getDataSession(configSave.rootName, name),
-                  getSiteConfig[n][0]
-                )
-
-                if (!dataVerify.status) {
-                  getData(
-                    this.props.url,
-                    n,
-                    this.callback,
-                    getSiteConfig[n][0],
-                    getSiteConfig[n][1],
-                    configSave
-                  )
-                } else {
-                  if (dataSession === false) {
-                    dataSession = {}
-                  }
-                  dataSession = {
-                    ...dataSession,
-                    [name]: {
-                      ...getDataSession(configSave.rootName, name)
-                    }
-                  }
-                }
-              } else {
-                getData(
-                  this.props.url,
-                  n,
-                  this.callback,
-                  getSiteConfig[n][0],
-                  getSiteConfig[n][1],
-                  configSave
-                )
-              }
-            })
-
-            if (dataSession !== false && Object.keys(dataSession).length >= 1) {
-              this.setState({
-                data: {
-                  ...this.state.data,
-                  [rootName]: {
-                    ...this.state.data[rootName],
-                    ...dataSession
-                  }
-                }
-              })
-            }
-          }
-
-          resolve()
-        })
-          .then((e) => {})
-          .catch((e) => {
-            console.log(e)
-          })
-      } else {
-        this.setState({
-          next: true,
-          data: {
-            ...this.state.data,
-            [rootName]: {}
-          }
-        })
-      }
-    }
   }
 
   callback = (name, data, nivel, error = false) => {
