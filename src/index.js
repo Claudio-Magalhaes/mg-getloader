@@ -1,9 +1,10 @@
 import React, { Component, Fragment } from 'react'
-import getData from '../lib/getDate'
+import getData from './lib/getData'
 import PropType from 'prop-types'
-import { checkTimerGet } from '../lib/timerGet'
-import { getDataSession, check } from '../lib/getDate/config'
-import verifyDataRequest from '../lib/verifyDataRequest'
+import { checkTimerGet } from './lib/timer'
+import check from './lib/helpers'
+import getDataSession from '../get'
+import verifyDataRequest from './lib/verifyDataRequest'
 require('../src/css/progressBar.css')
 
 class index extends Component {
@@ -285,11 +286,28 @@ class index extends Component {
   }
 
   render() {
-    const { progressValue, progressError } = this.state
+    const { state, progressValue, progressError } = this.state
+    const {
+      save,
+      Loader,
+      config,
+      data,
+      loaderOff,
+      permiteErro,
+      saveLog,
+      timerPause,
+      url,
+      ...rest
+    } = this.props
 
-    if (this.state.state === 'final') {
+    if (
+      state === 'final' ||
+      state === 'optional' ||
+      this.props.loaderOff === true
+    ) {
       return (
         <this.props.data.Page
+          {...rest}
           {...this.state.data}
           loaderOn={() => this.setState({ loader: true })}
           loaderOff={() => this.setState({ loader: false })}
@@ -315,9 +333,6 @@ class index extends Component {
 
 index.defaultProps = {
   config: {},
-  save: true,
-  saveLog: true,
-  timerPause: 3,
   url: {
     base:
       window.location.origin + '/core_magales/Public/Functions/DataSite?page=',
@@ -327,15 +342,33 @@ index.defaultProps = {
       window.location.origin +
       '/core_magales/Public/Functions/DataSite/previa?page='
   },
+  data: {},
+  timerPause: 3,
+  Loader: <Fragment>criar loader padrão</Fragment>,
+  loaderOff: false,
+  save: true,
+  saveLog: true,
   permiteErro: false
 }
 
 index.propTypes = {
-  //config: PropType.object,
+  config: PropType.oneOfType([PropType.object, PropType.array]),
+  url: PropType.oneOfType([
+    PropType.shape({
+      base: PropType.string,
+      alternative: PropType.string,
+      test: PropType.string,
+      anula: PropType.bool
+    }),
+    PropType.array
+  ]),
+  data: PropType.oneOfType([PropType.object, PropType.array]),
   timerPause: PropType.number,
-  baseUrl: PropType.object,
-  alternativeUrl: PropType.string,
-  TestUrl: PropType.string
+  Loader: PropType.node,
+  loaderOff: PropType.bool,
+  save: PropType.bool,
+  saveLog: PropType.bool,
+  permiteErro: PropType.bool
 }
 
 export default index

@@ -1,4 +1,4 @@
-import { setTmerGet } from '../timerGet'
+import { setTmerGet } from './timer'
 
 /**
  * função salvará dados de retorno na session de acordo com a raiz, como por

@@ -1,6 +1,6 @@
 import Axios from 'axios'
-import verifyDataRequest from '../verifyDataRequest'
-import getLog from './getLog'
+import verifyDataRequest from './verifyDataRequest'
+import getLog from './saveData'
 
 /**
  * Função de busca de dados
@@ -28,7 +28,7 @@ const index = (url, param, callback, verify = null, configSave) => {
           getLog(configSave, resp.data, dataVerify)
 
           if (verify !== null) {
-            if (!dataVerify.status) {
+            if (!dataVerify.status && configSave.permiteErro !== true) {
               callback(resp.data, configSave, true)
               // eslint-disable-next-line no-throw-literal
               throw 'param01'
@@ -94,7 +94,7 @@ const index = (url, param, callback, verify = null, configSave) => {
           getLog(configSave, resp.data, dataVerify)
 
           if (verify !== null) {
-            if (!dataVerify.status) {
+            if (!dataVerify.status && configSave.permiteErro !== true) {
               callback(resp.data, configSave, true)
               // eslint-disable-next-line no-throw-literal
               throw 'param01'
@@ -125,14 +125,88 @@ const index = (url, param, callback, verify = null, configSave) => {
             console.log(erro)
             console.warn(configSave.saveName, ': Erro ao buscar dados')
             break
+       }
+      })
+  }
+
+  const getPrevia = () => {
+    Axios.get(url.test + param)
+      .then((resp) => {
+        if (resp.status === 200) {
+          // verificando retorno
+          const dataVerify = verifyDataRequest(
+            configSave.saveName,
+            resp.data,
+            verify
+          )
+
+          // verificando salvamento de dados e log
+          getLog(configSave, resp.data, dataVerify)
+
+          if (verify !== null) {
+            if (!dataVerify.status && configSave.permiteErro !== true) {
+              callback(resp.data, configSave, true)
+              // eslint-disable-next-line no-throw-literal
+              throw 'param01'
+            }
+          }
+
+          callback(resp.data, configSave)
+        } else {
+          // eslint-disable-next-line no-throw-literal
+          throw 'param02'
+        }
+      })
+      .catch((erro) => {
+        switch (erro) {
+          case 'param01':
+            if (url.alternative) {
+              console.warn(
+                configSave.saveName,
+                ': Não corresponde ao esperado, buscando em base alternativa'
+              )
+              alternative()
+            } else {
+              console.warn(
+                configSave.saveName,
+                ': Não corresponde ao esperado, e não há alternativas de busca'
+              )
+            }
+            break
+          case 'param02':
+            if (url.alternative) {
+              console.warn(
+                configSave.saveName,
+                ': Erro na busca de dados, buscando em base alternativa'
+              )
+              alternative()
+            } else {
+              console.warn(
+                configSave.saveName,
+                ': Erro na busca de dados, e não há alternativas de busca'
+              )
+            }
+            break
+          default:
+            console.log(erro)
+            console.warn(configSave.saveName, ': Erro ao buscar dados')
+            break
         }
       })
   }
 
-  const getPrevia = () => {}
-
-  if (window.sessionStorage.getItem('VerPreviaDoSite') === 'true') {
-    getPrevia()
+  if (
+    window.sessionStorage.getItem('VerPreviaDoSite') === 'true' ||
+    window.sessionStorage.getItem('test') === 'true'
+  ) {
+    if (url.test) {
+      getPrevia()
+    } else {
+      console.warn(
+        `url de teste não informada para ${configSave.rootName} ` +
+          `${configSave.saveName} utilizando url base`
+      )
+    }
   } else {
     base()
   }

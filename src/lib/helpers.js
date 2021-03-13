@@ -1,15 +1,4 @@
-export const getDataSession = (root, name) => {
-  const rootData = window.sessionStorage.getItem(root)
-    ? JSON.parse(window.sessionStorage.getItem(root))
-    : {}
-
-  if (rootData[name]) {
-    return rootData[name]
-  }
-  return false
-}
-
-export const check = (data, sub) => {
+const check = (data, sub) => {
   const newData = {}
   Object.keys(data).map((d) => {
     if (typeof sub[d] !== 'undefined') {
@@ -36,3 +25,5 @@ const url = (data, sub) => {
     ...sub
   }
 }
+
+export default check
