@@ -2,11 +2,7 @@ import React, { Component, Fragment } from 'react'
 import getData from '../lib/getDate'
 import PropType from 'prop-types'
 import { checkTimerGet } from '../lib/timerGet'
-import {
-  checkParam,
-  getDataSession,
-  checkConfigSave, checkUrl
-} from '../lib/getDate/config'
+import { getDataSession, check } from '../lib/getDate/config'
 import verifyDataRequest from '../lib/verifyDataRequest'
 require('../src/css/progressBar.css')
 
@@ -25,14 +21,29 @@ class index extends Component {
       progressError: '',
       // state base de configuração do props
       configSave: {
-        saveLog: props.saveLog,
-        timerPause: props.timerPause
+        param: '',
+        save: true,
+        saveLog: true,
+        timerPause: 3,
+        url: {},
+        permiteErro: false
       }
     }
   }
 
   componentDidMount() {
-    this.setState({ state: 'start' })
+    const props = this.props
+    this.setState({
+      state: 'start',
+      configSave: {
+        ...this.state.configSave,
+        save: props.save,
+        saveLog: props.saveLog,
+        timerPause: props.timerPause,
+        url: props.url,
+        permiteErro: props.permiteErro
+      }
+    })
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
@@ -119,28 +130,18 @@ class index extends Component {
     }
   }
 
-  configRequest = (root, nameRoot) => {
+  configRequest = (root, rootName) => {
     if (root) {
       if (typeof root === 'object' || Array.isArray(root)) {
-        let configSave = {}
+        let configSave = this.state.configSave
+        configSave.rootName = rootName
+
         if (Array.isArray(root) && root[1]) {
-          configSave = checkConfigSave(
-            {
-              ...this.state.configSave,
-              rootName: nameRoot
-            },
-            root[1]
-          )
-          configSave.url = checkUrl(this.props.url, root[1].url)
-        } else {
-          configSave = {
-            ...this.state.configSave,
-            rootName: nameRoot,
-            url: this.props.url
-          }
+          configSave = check(configSave, root[1])
         }
+
         this.setState({
-          state: nameRoot,
+          state: rootName,
           compare: configSave.rootName,
           progress: false,
           progressValue: 0,
@@ -170,40 +171,34 @@ class index extends Component {
       let dataSession = false
 
       Object.keys(getSiteConfig).map((n) => {
-        let param = {}
-        let url = {}
+        let finalConfig = configSave
+        finalConfig.saveName = n
         if (getSiteConfig[n][1]) {
-          param = checkParam(n, getSiteConfig[n][1].param)
-          url = checkUrl(configSave.url, getSiteConfig[n][1].url)
-        } else {
-          param = checkParam(n, {})
-          url = configSave.url
+          finalConfig = check(finalConfig, getSiteConfig[n][1])
         }
 
-        if (checkTimerGet(rootName, param.saveName)) {
+        if (checkTimerGet(finalConfig.rootName, finalConfig.saveName)) {
           getData(
-            url,
-            param,
+            finalConfig.url,
+            finalConfig.param,
             this.callback,
             getSiteConfig[n][0],
-            getSiteConfig[n][1],
-            configSave
+            finalConfig
           )
-        } else if (getDataSession(configSave.rootName, param.saveName)) {
+        } else if (getDataSession(finalConfig.rootName, finalConfig.saveName)) {
           const dataVerify = verifyDataRequest(
-            param,
-            getDataSession(configSave.rootName, param.saveName),
+            finalConfig.saveName,
+            getDataSession(finalConfig.rootName, finalConfig.saveName),
             getSiteConfig[n][0]
           )
 
           if (!dataVerify.status) {
             getData(
-              url,
-              param,
+              finalConfig.url,
+              finalConfig.param,
               this.callback,
               getSiteConfig[n][0],
-              getSiteConfig[n][1],
-              configSave
+              finalConfig
             )
           } else {
             if (dataSession === false) {
@@ -211,19 +206,18 @@ class index extends Component {
             }
             dataSession = {
               ...dataSession,
-              [param.saveName]: {
-                ...getDataSession(configSave.rootName, param.saveName)
+              [finalConfig.saveName]: {
+                ...getDataSession(finalConfig.rootName, finalConfig.saveName)
               }
             }
           }
         } else {
           getData(
-            url,
-            param.saveName,
+            finalConfig.url,
+            finalConfig.param,
             this.callback,
             getSiteConfig[n][0],
-            getSiteConfig[n][1],
-            configSave
+            finalConfig
           )
         }
       })
@@ -271,8 +265,8 @@ class index extends Component {
     this.setState({ state: next })
   }
 
-  callback = (name, data, nivel, error = false) => {
-    if (error) {
+  callback = (data, configSave, error = false) => {
+    if (error && configSave.permiteErro === false) {
       this.setState({
         progressError: 'error'
       })
@@ -280,9 +274,9 @@ class index extends Component {
       this.setState({
         data: {
           ...this.state.data,
-          [nivel]: {
-            ...this.state.data[nivel],
-            [name]: data
+          [configSave.rootName]: {
+            ...this.state.data[configSave.rootName],
+            [configSave.saveName]: data
           }
         },
         progressValue: this.state.progressValue + this.state.progressValuePart
@@ -321,6 +315,8 @@ class index extends Component {
 
 index.defaultProps = {
   config: {},
+  save: true,
+  saveLog: true,
   timerPause: 3,
   url: {
     base:
@@ -331,8 +327,7 @@ index.defaultProps = {
       window.location.origin +
       '/core_magales/Public/Functions/DataSite/previa?page='
   },
-  permiteErro: false,
-  saveLog: true
+  permiteErro: false
 }
 
 index.propTypes = {
