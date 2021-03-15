@@ -1,6 +1,6 @@
 {
   "name": "mg-getloader",
-  "version": "0.0.5",
+  "version": "0.0.7",
   "description": "description",
   "author": "claudio magalhaes",
   "license": "MIT",
@@ -53,6 +53,7 @@
   },
   "files": [
     "dist",
-    "get"
+    "get",
+    "css"
   ]
 }

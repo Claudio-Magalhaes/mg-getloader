@@ -5,7 +5,7 @@ import { checkTimerGet } from './lib/timer'
 import check from './lib/helpers'
 import getDataSession from '../get'
 import verifyDataRequest from './lib/verifyDataRequest'
-require('../src/css/progressBar.css')
+require('../css/progressBar.css')
 
 class index extends Component {
   constructor(props) {
@@ -48,6 +48,7 @@ class index extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
+    alert(this.state.state)
     switch (this.state.state) {
       case 'start':
         this.configRequest(this.props.config, 'siteConfig')
