@@ -48,7 +48,6 @@ class index extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    alert(this.state.state)
     switch (this.state.state) {
       case 'start':
         this.configRequest(this.props.config, 'siteConfig')
@@ -129,6 +128,26 @@ class index extends Component {
           }
         }
         break
+    }
+  }
+
+  verifyState = (base) => {
+    if (this.state.compare) {
+      if (this.state.data[this.state.compare]) {
+        if (this.props.config) {
+          const length = Array.isArray(this.props.config)
+            ? Object.keys(this.props.config[0]).length
+            : Object.keys(this.props.config).length
+          if (
+            Object.keys(this.state.data[this.state.compare]).length ===
+            length
+          ) {
+            this.configRequest(this.props.data.data.config, 'requestConfig')
+          }
+        } else {
+          this.nextState()
+        }
+      }
     }
   }
 
@@ -336,12 +355,12 @@ index.defaultProps = {
   config: {},
   url: {
     base:
-      window.location.origin + '/core_magales/Public/Functions/DataSite?page=',
+      window.location.origin + '/core_magales/Public/Functions/DataSite?pages=',
     alternative:
-      window.location.origin + '/core_magales/Public/Functions/DataSite?page=',
+      window.location.origin + '/core_magales/Public/Functions/DataSite?pages=',
     test:
       window.location.origin +
-      '/core_magales/Public/Functions/DataSite/previa?page='
+      '/core_magales/Public/Functions/DataSite/previa?pages='
   },
   data: {},
   timerPause: 3,
