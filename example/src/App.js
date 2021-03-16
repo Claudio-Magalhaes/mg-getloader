@@ -1,41 +1,40 @@
 import React from 'react'
 import GetLoader from 'mg-getloader'
 
-const Home = (props) => {
-  return <h1>Home</h1>
-}
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 
-const routers = {
-  Page: Home,
-  data: {
-    config: [
-      {
-        home: ["object", { param: 'home' }]
-      }
-    ],
-    required: [
-      {
-        home: ["object", { param: 'home' }]
-      }
-    ],
-    optional: [
-      {
-        home: ["object", { param: 'home' }]
-      }
-    ]
-  }}
+import routers from './core/routers'
 
 const App = () => {
-  return <GetLoader
-    data={routers}
-    url={{
-      base: '/core_magales/Public/Functions/DataSite?page=',
-      alternative: '/core_magales/Public/Functions/DataSite?page=',
-      test: '/core_magales/Public/Functions/DataSite/previa?page='
-    }}
-    timerPause={0}
-    Loader={'loader...'}
-  />
+  return (
+    <div>
+      <Router>
+        <Switch>
+          {routers.map((d, k) => (
+            <Route
+              key={k}
+              path={`${process.env.PUBLIC_URL + d.router + d.param}`}
+              exact={d.exact}
+              render={props => <GetLoader
+                {...props}
+                url={{
+                  base: '/core_magales/Public/Functions/DataSite?page=',
+                  alternative: '/core_magales/Public/Functions/DataSite?page=',
+                  test: '/core_magales/Public/Functions/DataSite/previa?page='
+                }}
+                config={{}}
+                timerPause={0}
+                data={d}
+                save={false}
+                Loader={'loader...'}
+              />}
+            />
+          ))
+          }
+        </Switch>
+      </Router>
+    </div>
+  )
 }
 
 export default App
