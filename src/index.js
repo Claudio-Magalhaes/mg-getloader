@@ -131,18 +131,17 @@ class index extends Component {
     }
   }
 
-  verifyState = (base) => {
+  verifyState = (base, rootName) => {
     if (this.state.compare) {
       if (this.state.data[this.state.compare]) {
         if (this.props.config) {
-          const length = Array.isArray(this.props.config)
-            ? Object.keys(this.props.config[0]).length
-            : Object.keys(this.props.config).length
+          const length = Array.isArray(base)
+            ? Object.keys(base[0]).length
+            : Object.keys(base).length
           if (
-            Object.keys(this.state.data[this.state.compare]).length ===
-            length
+            Object.keys(this.state.data[this.state.compare]).length === length
           ) {
-            this.configRequest(this.props.data.data.config, 'requestConfig')
+            this.configRequest(base, rootName)
           }
         } else {
           this.nextState()
@@ -152,6 +151,7 @@ class index extends Component {
   }
 
   configRequest = (root, rootName) => {
+    debugger
     if (root) {
       if (typeof root === 'object' || Array.isArray(root)) {
         let configSave = this.state.configSave
