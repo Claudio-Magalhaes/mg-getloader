@@ -8,7 +8,14 @@ const routers = [
     data: {
       config: [
         {
-          home: ["object", { param: 'home' }]
+          home: ["object", { param: 'home' }],
+          home2: ["object", { param: 'home' }],
+          home3: ["object", { param: 'home' }],
+          home4: ["object", { param: 'home' }],
+          home5: ["object", { param: 'home' }]
+        },
+        {
+          save: false
         }
       ],
       required: [

@@ -63,7 +63,14 @@ class index extends Component {
                 Object.keys(this.state.data[this.state.compare]).length ===
                 length
               ) {
-                this.configRequest(this.props.data.data.config, 'requestConfig')
+                if (!this.props.data.data) {
+                  this.nextState('final')
+                } else {
+                  this.configRequest(
+                    this.props.data.data.config,
+                    'requestConfig'
+                  )
+                }
               }
             } else {
               this.nextState()
@@ -72,86 +79,49 @@ class index extends Component {
         }
         break
       case 'requestConfig':
-        if (this.state.compare) {
-          if (this.state.data[this.state.compare]) {
-            if (this.props.data.data.config) {
-              const length = Array.isArray(this.props.data.data.config)
-                ? Object.keys(this.props.data.data.config[0]).length
-                : Object.keys(this.props.data.data.config).length
-              if (
-                Object.keys(this.state.data[this.state.compare]).length ===
-                length
-              ) {
-                this.configRequest(this.props.data.data.required, 'request')
-              }
-            } else {
-              this.nextState()
-            }
-          }
+        if (this.verifyState('config')) {
+          this.configRequest(this.props.data.data.required, 'request')
         }
         break
       case 'request':
-        if (this.state.compare) {
-          if (this.state.data[this.state.compare]) {
-            if (this.props.data.data.required) {
-              const length = Array.isArray(this.props.data.data.required)
-                ? Object.keys(this.props.data.data.required[0]).length
-                : Object.keys(this.props.data.data.required).length
-              if (
-                Object.keys(this.state.data[this.state.compare]).length ===
-                length
-              ) {
-                this.configRequest(this.props.data.data.optional, 'optional')
-              }
-            } else {
-              this.nextState()
-            }
-          }
+        if (this.verifyState('required')) {
+          this.configRequest(this.props.data.data.optional, 'optional')
         }
         break
       case 'optional':
-        if (this.state.compare) {
-          if (this.state.data[this.state.compare]) {
-            if (this.props.data.data.optional) {
-              const length = Array.isArray(this.props.data.data.optional)
-                ? Object.keys(this.props.data.data.optional[0]).length
-                : Object.keys(this.props.data.data.optional).length
-              if (
-                Object.keys(this.state.data[this.state.compare]).length ===
-                length
-              ) {
-                this.nextState()
-              }
-            } else {
-              this.nextState()
-            }
-          }
+        if (this.verifyState('optional')) {
+          this.nextState()
         }
+        break
+      default:
         break
     }
   }
 
-  verifyState = (base, rootName) => {
+  verifyState = (nivelData) => {
     if (this.state.compare) {
       if (this.state.data[this.state.compare]) {
-        if (this.props.config) {
-          const length = Array.isArray(base)
-            ? Object.keys(base[0]).length
-            : Object.keys(base).length
-          if (
-            Object.keys(this.state.data[this.state.compare]).length === length
-          ) {
-            this.configRequest(base, rootName)
-          }
-        } else {
-          this.nextState()
+        let config = {}
+
+        if (this.props.data.data[nivelData]) {
+          config = this.props.data.data[nivelData]
+        }
+
+        const length = Array.isArray(config)
+          ? Object.keys(config[0]).length
+          : Object.keys(config).length
+
+        if (
+          Object.keys(this.state.data[this.state.compare]).length ===
+          length
+        ) {
+          return true
         }
       }
     }
   }
 
   configRequest = (root, rootName) => {
-    debugger
     if (root) {
       if (typeof root === 'object' || Array.isArray(root)) {
         let configSave = this.state.configSave
@@ -265,25 +235,29 @@ class index extends Component {
     }
   }
 
-  nextState = () => {
-    const state = this.state.state
-    let next = ''
-    switch (state) {
-      case 'siteConfig':
-        next = 'requestConfig'
-        break
-      case 'requestConfig':
-        next = 'request'
-        break
-      case 'request':
-        next = 'optional'
-        break
-      case 'optional':
-        next = 'final'
-        break
-    }
+  nextState = (immed = null) => {
+    if (immed) {
+      this.setState({ state: immed })
+    } else {
+      const state = this.state.state
+      let next = ''
+      switch (state) {
+        case 'siteConfig':
+          next = 'requestConfig'
+          break
+        case 'requestConfig':
+          next = 'request'
+          break
+        case 'request':
+          next = 'optional'
+          break
+        case 'optional':
+          next = 'final'
+          break
+      }
 
-    this.setState({ state: next })
+      this.setState({ state: next })
+    }
   }
 
   callback = (data, configSave, error = false) => {
