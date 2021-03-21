@@ -55,6 +55,6 @@
   "files": [
     "dist",
     "get",
-    "css"
+    "style"
   ]
 }

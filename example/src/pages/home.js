@@ -2,7 +2,7 @@ import React from 'react'
 
 const Home = (props) => {
   console.log(props)
-  props.loaderOn({})
+  //props.loaderOn({})
   return <h1>Home</h1>
 }
 

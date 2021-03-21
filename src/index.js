@@ -103,11 +103,13 @@ class index extends Component {
   verifyState = (nivelData) => {
     if (this.state.compare) {
       if (this.state.data[this.state.compare]) {
-        let config = {}
 
-        if (this.props.data.data[nivelData]) {
-          config = this.props.data.data[nivelData]
+        if (!this.props.data.data[nivelData]) {
+          this.nextState()
+          return
         }
+
+        let config = this.props.data.data[nivelData]
 
         const length = Array.isArray(config)
           ? Object.keys(config[0]).length
@@ -342,12 +344,12 @@ index.defaultProps = {
   config: {},
   url: {
     base:
-      window.location.origin + '/core_magales/Public/Functions/DataSite?pages=',
+      window.location.origin + '/core_magales/Public/Functions/DataSite?page=',
     alternative:
-      window.location.origin + '/core_magales/Public/Functions/DataSite?pages=',
+      window.location.origin + '/core_magales/Public/Functions/DataSite?page=',
     test:
       window.location.origin +
-      '/core_magales/Public/Functions/DataSite/previa?pages='
+      '/core_magales/Public/Functions/DataSite/previa?page='
   },
   data: {},
   timerPause: 3,
@@ -371,7 +373,7 @@ index.propTypes = {
   ]),
   data: PropType.oneOfType([PropType.object, PropType.array]),
   timerPause: PropType.number,
-  Loader: PropType.node,
+  //Loader: PropType.node,
   loaderOff: PropType.bool,
   save: PropType.bool,
   saveLog: PropType.bool,
