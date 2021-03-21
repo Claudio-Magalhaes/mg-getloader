@@ -5,7 +5,8 @@ import { checkTimerGet } from './lib/timer'
 import check from './lib/helpers'
 import getDataSession from '../get'
 import verifyDataRequest from './lib/verifyDataRequest'
-require('../css/progressBar.css')
+import DefaultLoader from './container/loader'
+import ProgressBar from './container/progressBar'
 
 class index extends Component {
   constructor(props) {
@@ -15,7 +16,8 @@ class index extends Component {
       compare: '',
       data: {},
       // state de controle do loader
-      loader: true,
+      loader: false,
+      propsLoader: {},
       // state de controle da barra de loader
       progress: false,
       progressValue: 0,
@@ -295,31 +297,42 @@ class index extends Component {
     } = this.props
 
     if (
-      state === 'final' ||
-      state === 'optional' ||
-      this.props.loaderOff === true
+      (state === 'final' ||
+        state === 'optional' ||
+        this.props.loaderOff === true) &&
+      this.state.loader !== true
     ) {
       return (
         <this.props.data.Page
           {...rest}
           {...this.state.data}
-          loaderOn={() => this.setState({ loader: true })}
-          loaderOff={() => this.setState({ loader: false })}
+          loaderOn={(propsLoader = null) => {
+            if (
+              propsLoader &&
+              !Array.isArray(propsLoader) &&
+              typeof propsLoader === 'object'
+            ) {
+              this.setState({ loader: true })
+            } else {
+              this.setState({
+                loader: true,
+                classesLoader: propsLoader
+              })
+            }
+          }}
+          loaderOff={() => this.setState({ loader: false, propsLoader: {} })}
         />
       )
     }
 
     return (
       <Fragment>
-        {this.props.Loader}
-        <div className='pre-progress'>
-          <div className='progress'>
-            <div
-              className={`progress-value ${progressError}`}
-              style={{ width: `${progressValue}%` }}
-            />
-          </div>
-        </div>
+        <this.props.Loader />
+        {/* eslint-disable-next-line react/jsx-no-undef */}
+        <ProgressBar
+          progressValue={progressValue}
+          progressError={progressError}
+        />
       </Fragment>
     )
   }
@@ -338,7 +351,7 @@ index.defaultProps = {
   },
   data: {},
   timerPause: 3,
-  Loader: <Fragment>criar loader padrão</Fragment>,
+  Loader: DefaultLoader,
   loaderOff: false,
   save: true,
   saveLog: true,

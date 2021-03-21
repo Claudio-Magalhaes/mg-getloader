@@ -26,7 +26,6 @@ const App = () => {
                 timerPause={0}
                 data={d}
                 save={false}
-                Loader={'loader...'}
               />}
             />
           ))

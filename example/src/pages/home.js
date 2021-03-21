@@ -1,7 +1,8 @@
 import React from 'react'
 
 const Home = (props) => {
-  console.log("prop: ", props)
+  console.log(props)
+  props.loaderOn({})
   return <h1>Home</h1>
 }
 
