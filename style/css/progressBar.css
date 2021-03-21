@@ -1,0 +1,19 @@
+.getloader-default-progressBar {
+  background: rgba(255, 255, 255, 0.1);
+  justify-content: flex-start;
+  padding: 3px;
+  border-radius: 100px;
+  align-items: center;
+  position: fixed;
+  height: 8px;
+  width: 98%;
+  bottom: .5rem;
+  left: 1%; }
+  .getloader-default-progressBar .progress-value {
+    box-shadow: 0 10px 40px -10px #fff;
+    border-radius: 100px;
+    background: white;
+    height: 8px;
+    width: 0; }
+  .getloader-default-progressBar .error {
+    background: #e0e18a !important; }
